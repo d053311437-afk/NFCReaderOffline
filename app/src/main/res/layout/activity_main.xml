@@ -1,0 +1,16 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="#F7F8FC" android:fillViewport="true">
+<LinearLayout android:orientation="vertical" android:padding="22dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+<TextView android:text="NFC Reader" android:textSize="30sp" android:textStyle="bold" android:textColor="#1D1B20" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+<TextView android:text="אופליין • פרטי • מהיר" android:textSize="15sp" android:textColor="#6F6A75" android:layout_marginTop="4dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+<LinearLayout android:id="@+id/scanCard" android:background="@drawable/card" android:gravity="center" android:orientation="vertical" android:layout_marginTop="28dp" android:layout_width="match_parent" android:layout_height="250dp">
+<TextView android:text="◉" android:textSize="64sp" android:textColor="#6750A4" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+<TextView android:id="@+id/status" android:text="הצמד כרטיס או תג NFC" android:textStyle="bold" android:textSize="21sp" android:textColor="#1D1B20" android:layout_marginTop="12dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+<TextView android:text="רב־קו • תג NFC • כרטיסים תואמים" android:textSize="14sp" android:textColor="#79747E" android:layout_marginTop="8dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+</LinearLayout>
+<TextView android:text="סריקה אחרונה" android:textSize="18sp" android:textStyle="bold" android:textColor="#1D1B20" android:layout_marginTop="28dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+<TextView android:id="@+id/result" android:background="@drawable/card" android:text="עדיין לא נסרק כרטיס" android:textSize="15sp" android:textColor="#49454F" android:padding="20dp" android:layout_marginTop="10dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+<TextView android:text="אפשרויות" android:textSize="18sp" android:textStyle="bold" android:textColor="#1D1B20" android:layout_marginTop="28dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+<Switch android:id="@+id/vibrate" android:text="רטט בסריקה" android:checked="true" android:textSize="16sp" android:layout_marginTop="8dp" android:layout_width="match_parent" android:layout_height="56dp"/>
+<Switch android:id="@+id/raw" android:text="הצג מידע טכני (Raw)" android:textSize="16sp" android:layout_width="match_parent" android:layout_height="56dp"/>
+<Switch android:id="@+id/save" android:text="שמור היסטוריית סריקות מקומית" android:textSize="16sp" android:layout_width="match_parent" android:layout_height="56dp"/>
+</LinearLayout></ScrollView>
