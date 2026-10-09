@@ -22,11 +22,12 @@ public class MainActivity extends Activity implements NfcAdapter.ReaderCallback 
   @Override protected void onResume(){ super.onResume(); updateState(); if(nfc!=null&&nfc.isEnabled()) nfc.enableReaderMode(this,this,NfcAdapter.FLAG_READER_NFC_A|NfcAdapter.FLAG_READER_NFC_B|NfcAdapter.FLAG_READER_NFC_F|NfcAdapter.FLAG_READER_NFC_V|NfcAdapter.FLAG_READER_NFC_BARCODE,null); }
   @Override protected void onPause(){ super.onPause(); if(nfc!=null)nfc.disableReaderMode(this); }
   public void onTagDiscovered(Tag tag){
-    String[] tech=tag.getTechList(); String type=classify(tech); String id=hex(tag.getId()); String ndef=readNdef(tag);
+    String[] tech=tag.getTechList(); String type=classify(tech); String id=hex(tag.getId()); String ndef=readNdef(tag); String payment=readPaymentDirectory(tag);
     runOnUiThread(()->{
       status.setText("זוהה בהצלחה"); nfcState.setText(type);
       StringBuilder s=new StringBuilder("סוג: ").append(type).append("\nטכנולוגיות: ").append(String.join(", ",shortTech(tech)));
-      if(!ndef.isEmpty()) s.append("\n\nתוכן NDEF:\n").append(ndef); else s.append("\n\nלא נמצא מידע NDEF פתוח לקריאה. כרטיסים חכמים כגון רב־קו, אשראי וקופת חולים עשויים לדרוש פרוטוקול ייעודי והרשאה. זיהוי NFC לבדו אינו מאפשר הצגת יתרות, חיובים או מידע רפואי.");
+      if(!payment.isEmpty()) s.append("\n\nבדיקת כרטיס תשלום:\n").append(payment);
+      if(!ndef.isEmpty()) s.append("\n\nתוכן NDEF:\n").append(ndef); else if(payment.isEmpty()) s.append("\n\nלא נמצא מידע NDEF פתוח לקריאה. כרטיסים חכמים כגון רב־קו, אשראי וקופת חולים עשויים לדרוש פרוטוקול ייעודי והרשאה. זיהוי NFC לבדו אינו מאפשר הצגת יתרות, חיובים או מידע רפואי.");
       if(type.equals("כרטיס חכם ISO-DEP")) s.append("\n\nזוהה ממשק כרטיס חכם (ISO-DEP). סוג הכרטיס המדויק אינו ניתן לקביעה מטכנולוגיית NFC בלבד.");
       if(raw.isChecked()) s.append("\n\nUID: ").append(id).append("\nUID bytes: ").append(tag.getId()==null?0:tag.getId().length);
       result.setText(s.toString());
@@ -61,6 +62,27 @@ public class MainActivity extends Activity implements NfcAdapter.ReaderCallback 
       }
       return out.toString().trim();
     }catch(Exception e){ return ""; }
+  }
+  String readPaymentDirectory(Tag tag) {
+    IsoDep iso=IsoDep.get(tag);
+    if(iso==null) return "";
+    try {
+      iso.setTimeout(2500);
+      iso.connect();
+      // EMV contactless PPSE: directory selection only. Never request card numbers or transaction records.
+      byte[] command=new byte[]{0x00,(byte)0xA4,0x04,0x00,0x0E,
+        0x32,0x50,0x41,0x59,0x2E,0x53,0x59,0x53,0x2E,0x44,0x44,0x46,0x30,0x31,0x00};
+      byte[] response=iso.transceive(command);
+      if(response.length<2) return "הכרטיס לא החזיר תשובה תקינה.";
+      int sw=((response[response.length-2]&255)<<8)|(response[response.length-1]&255);
+      if(sw==0x9000) return "זוהה ממשק תשלום EMV ללא מגע.\\nהקריאה הצליחה. אין אפשרות לזהות בוודאות את חברת ההנפקה (ישראכרט) מתוך הבדיקה הזו.\\nמטעמי פרטיות לא נקראים מספר הכרטיס, פרטי עסקאות או נתונים אישיים.\\nחיובים ויתרות אינם שמורים בממשק NFC של הכרטיס.";
+      if(sw==0x6A82) return "לא נמצאה ספריית תשלום EMV (PPSE). ייתכן שהכרטיס אינו תומך בממשק זה.";
+      return "הכרטיס הגיב, אך לא אישר את בדיקת ספריית התשלום. קוד תגובה: "+String.format(java.util.Locale.US,"%04X",sw);
+    } catch(Exception e) {
+      return "לא ניתן להשלים את בדיקת ממשק התשלום. נסה להחזיק את הכרטיס יציב כמה שניות.";
+    } finally {
+      try { if(iso.isConnected()) iso.close(); } catch(Exception ignored) {}
+    }
   }
   String classify(String[] t){ String s=String.join(" ",t); if(s.contains("IsoDep"))return "כרטיס חכם ISO-DEP"; if(s.contains("Ndef"))return "תג NDEF"; if(s.contains("MifareClassic"))return "MIFARE Classic"; if(s.contains("MifareUltralight"))return "MIFARE Ultralight"; if(s.contains("NfcV"))return "NFC-V"; if(s.contains("NfcF"))return "NFC-F"; return "תג NFC"; }
   String[] shortTech(String[] a){ String[] o=new String[a.length]; for(int i=0;i<a.length;i++)o[i]=a[i].substring(a[i].lastIndexOf('.')+1); return o; }
