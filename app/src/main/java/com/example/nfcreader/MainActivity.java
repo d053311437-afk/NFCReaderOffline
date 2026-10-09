@@ -22,14 +22,14 @@ public class MainActivity extends Activity implements NfcAdapter.ReaderCallback 
   @Override protected void onResume(){ super.onResume(); updateState(); if(nfc!=null&&nfc.isEnabled()) nfc.enableReaderMode(this,this,NfcAdapter.FLAG_READER_NFC_A|NfcAdapter.FLAG_READER_NFC_B|NfcAdapter.FLAG_READER_NFC_F|NfcAdapter.FLAG_READER_NFC_V|NfcAdapter.FLAG_READER_NFC_BARCODE,null); }
   @Override protected void onPause(){ super.onPause(); if(nfc!=null)nfc.disableReaderMode(this); }
   public void onTagDiscovered(Tag tag){
-    String[] tech=tag.getTechList(); String type=classify(tech); String id=hex(tag.getId()); String ndef=readNdef(tag); String payment=readPaymentDirectory(tag);
+    String[] tech=tag.getTechList(); String type=classify(tech); String id=hex(tag.getId()); String ndef=IsoDep.get(tag)==null?readNdef(tag):""; String payment=readPaymentDirectory(tag);
     runOnUiThread(()->{
       status.setText("זוהה בהצלחה"); nfcState.setText(type);
       StringBuilder s=new StringBuilder("סוג: ").append(type).append("\nטכנולוגיות: ").append(String.join(", ",shortTech(tech)));
       if(!payment.isEmpty()) s.append("\n\nבדיקת כרטיס תשלום:\n").append(payment);
-      if(!ndef.isEmpty()) s.append("\n\nתוכן NDEF:\n").append(ndef); else if(payment.isEmpty()) s.append("\n\nלא נמצא מידע NDEF פתוח לקריאה. כרטיסים חכמים כגון רב־קו, אשראי וקופת חולים עשויים לדרוש פרוטוקול ייעודי והרשאה. זיהוי NFC לבדו אינו מאפשר הצגת יתרות, חיובים או מידע רפואי.");
+      if(!ndef.isEmpty()) s.append("\n\nתוכן NDEF:\n").append(ndef); else if(payment.isEmpty() && IsoDep.get(tag)==null) s.append("\n\nלא נמצא מידע NDEF פתוח לקריאה. כרטיסים חכמים כגון רב־קו, אשראי וקופת חולים עשויים לדרוש פרוטוקול ייעודי והרשאה. זיהוי NFC לבדו אינו מאפשר הצגת יתרות, חיובים או מידע רפואי.");
       if(type.equals("כרטיס חכם ISO-DEP")) s.append("\n\nזוהה ממשק כרטיס חכם (ISO-DEP). סוג הכרטיס המדויק אינו ניתן לקביעה מטכנולוגיית NFC בלבד.");
-      if(raw.isChecked()) s.append("\n\nUID: ").append(id).append("\nUID bytes: ").append(tag.getId()==null?0:tag.getId().length);
+      if(raw.isChecked() && IsoDep.get(tag)==null) s.append("\n\nUID: ").append(id).append("\nUID bytes: ").append(tag.getId()==null?0:tag.getId().length);
       result.setText(s.toString());
       if(vibrate.isChecked()&&Build.VERSION.SDK_INT>=26)((Vibrator)getSystemService(VIBRATOR_SERVICE)).vibrate(VibrationEffect.createOneShot(55,100));
       if(sound.isChecked()) new ToneGenerator(AudioManager.STREAM_NOTIFICATION,55).startTone(ToneGenerator.TONE_PROP_BEEP,100);
