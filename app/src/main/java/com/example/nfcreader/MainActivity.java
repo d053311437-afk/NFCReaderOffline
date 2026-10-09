@@ -34,7 +34,34 @@ public class MainActivity extends Activity implements NfcAdapter.ReaderCallback 
       if(sound.isChecked()) new ToneGenerator(AudioManager.STREAM_NOTIFICATION,55).startTone(ToneGenerator.TONE_PROP_BEEP,100);
     });
   }
-  String readNdef(Tag tag){ try{ Ndef n=Ndef.get(tag); if(n==null)return ""; NdefMessage m=n.getCachedNdefMessage(); if(m==null)return ""; StringBuilder out=new StringBuilder(); for(NdefRecord r:m.getRecords()){ android.net.Uri u=r.toUri(); if(u!=null) out.append(u).append("\n"); else out.append("Record: TNF ").append(r.getTnf()).append(", ").append(r.getPayload().length).append(" bytes\n"); } return out.toString().trim(); }catch(Exception e){return "";} }
+  String readNdef(Tag tag){
+    try {
+      Ndef n=Ndef.get(tag);
+      if(n==null) return "";
+      NdefMessage m=n.getCachedNdefMessage();
+      if(m==null) {
+        try { n.connect(); m=n.getNdefMessage(); }
+        finally { try { n.close(); } catch(Exception ignored) {} }
+      }
+      if(m==null) return "";
+      StringBuilder out=new StringBuilder();
+      for(NdefRecord r:m.getRecords()){
+        if(r.getTnf()==NdefRecord.TNF_WELL_KNOWN && Arrays.equals(r.getType(),NdefRecord.RTD_TEXT)){
+          byte[] payload=r.getPayload();
+          if(payload.length<1) continue;
+          int languageLength=payload[0]&0x3F;
+          if(1+languageLength>payload.length) continue;
+          String encoding=(payload[0]&0x80)==0?"UTF-8":"UTF-16";
+          out.append(new String(payload,1+languageLength,payload.length-1-languageLength,encoding)).append("\\n");
+        } else {
+          android.net.Uri u=r.toUri();
+          if(u!=null) out.append(u).append("\\n");
+          else out.append("רשומה מסוג ").append(r.getTnf()).append(" (").append(r.getPayload().length).append(" בתים)\\n");
+        }
+      }
+      return out.toString().trim();
+    }catch(Exception e){ return ""; }
+  }
   String classify(String[] t){ String s=String.join(" ",t); if(s.contains("IsoDep"))return "כרטיס חכם ISO-DEP"; if(s.contains("Ndef"))return "תג NDEF"; if(s.contains("MifareClassic"))return "MIFARE Classic"; if(s.contains("MifareUltralight"))return "MIFARE Ultralight"; if(s.contains("NfcV"))return "NFC-V"; if(s.contains("NfcF"))return "NFC-F"; return "תג NFC"; }
   String[] shortTech(String[] a){ String[] o=new String[a.length]; for(int i=0;i<a.length;i++)o[i]=a[i].substring(a[i].lastIndexOf('.')+1); return o; }
   String hex(byte[] b){ if(b==null)return "לא זמין"; StringBuilder s=new StringBuilder(); for(byte x:b)s.append(String.format("%02X",x)); return s.toString(); }
