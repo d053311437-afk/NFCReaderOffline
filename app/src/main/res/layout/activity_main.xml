@@ -10,6 +10,8 @@
 <TextView android:text="תוצאה" android:textSize="19sp" android:textStyle="bold" android:textColor="#1D1B20" android:layout_marginTop="26dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
 <TextView android:id="@+id/result" android:background="@drawable/card" android:text="עדיין לא נסרק כרטיס" android:textSize="15sp" android:textColor="#49454F" android:padding="20dp" android:layout_marginTop="10dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
 <Button android:id="@+id/copy" android:text="העתק תוצאה" android:layout_marginTop="12dp" android:layout_width="match_parent" android:layout_height="52dp"/>
+<Button android:id="@+id/history" android:text="היסטוריית סריקות אופליין" android:layout_marginTop="12dp" android:layout_width="match_parent" android:layout_height="52dp"/>
+<Button android:id="@+id/clearHistory" android:text="מחק היסטוריית סריקות" android:layout_marginTop="4dp" android:layout_width="match_parent" android:layout_height="52dp"/>
 <TextView android:text="הגדרות" android:textSize="19sp" android:textStyle="bold" android:textColor="#1D1B20" android:layout_marginTop="26dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
 <Switch android:id="@+id/vibrate" android:text="רטט בסריקה" android:checked="true" android:textSize="16sp" android:layout_width="match_parent" android:layout_height="56dp"/>
 <Switch android:id="@+id/sound" android:text="צליל בסריקה" android:checked="true" android:textSize="16sp" android:layout_width="match_parent" android:layout_height="56dp"/>
