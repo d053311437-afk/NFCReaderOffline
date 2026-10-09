@@ -26,8 +26,9 @@ public class MainActivity extends Activity implements NfcAdapter.ReaderCallback 
     runOnUiThread(()->{
       status.setText("זוהה בהצלחה"); nfcState.setText(type);
       StringBuilder s=new StringBuilder("סוג: ").append(type).append("\nטכנולוגיות: ").append(String.join(", ",shortTech(tech)));
-      if(!ndef.isEmpty()) s.append("\n\nתוכן NDEF:\n").append(ndef);
-      if(raw.isChecked()) s.append("\n\nUID: ").append(id).append("\nUID bytes: ").append(tag.getId()==null?0:tag.getId().length);
+      if(!ndef.isEmpty()) s.append("\n\nתוכן NDEF:\n").append(ndef); else s.append("\n\nלא נמצא מידע NDEF פתוח לקריאה. כרטיסים חכמים כגון רב־קו, אשראי וקופת חולים עשויים לדרוש פרוטוקול ייעודי והרשאה. זיהוי NFC לבדו אינו מאפשר הצגת יתרות, חיובים או מידע רפואי.");
+      if(type.equals("כרטיס חכם ISO-DEP")) s.append("
+\nזוהה ממשק כרטיס חכם (ISO-DEP). סוג הכרטיס המדויק אינו ניתן לקביעה מטכנולוגיית NFC בלבד.");\n      if(raw.isChecked()) s.append("\n\nUID: ").append(id).append("\nUID bytes: ").append(tag.getId()==null?0:tag.getId().length);
       result.setText(s.toString());
       if(vibrate.isChecked()&&Build.VERSION.SDK_INT>=26)((Vibrator)getSystemService(VIBRATOR_SERVICE)).vibrate(VibrationEffect.createOneShot(55,100));
       if(sound.isChecked()) new ToneGenerator(AudioManager.STREAM_NOTIFICATION,55).startTone(ToneGenerator.TONE_PROP_BEEP,100);
