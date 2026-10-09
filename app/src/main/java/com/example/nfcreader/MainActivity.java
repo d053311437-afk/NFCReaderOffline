@@ -10,12 +10,14 @@ import android.widget.*;
 import java.util.*;
 
 public class MainActivity extends Activity implements NfcAdapter.ReaderCallback {
-  NfcAdapter nfc; TextView status,result,nfcState; Switch vibrate,raw,sound; Button copy;
+  NfcAdapter nfc; TextView status,result,nfcState; Switch vibrate,raw,sound; Button copy; Button history,clearHistory;
   @Override public void onCreate(Bundle b){
     super.onCreate(b); setContentView(R.layout.activity_main);
     status=findViewById(R.id.status); result=findViewById(R.id.result); nfcState=findViewById(R.id.nfcState);
-    vibrate=findViewById(R.id.vibrate); raw=findViewById(R.id.raw); sound=findViewById(R.id.sound); copy=findViewById(R.id.copy);
+    vibrate=findViewById(R.id.vibrate); raw=findViewById(R.id.raw); sound=findViewById(R.id.sound); copy=findViewById(R.id.copy); history=findViewById(R.id.history); clearHistory=findViewById(R.id.clearHistory);
     nfc=NfcAdapter.getDefaultAdapter(this); updateState();
+    history.setOnClickListener(v->{ String saved=getPreferences(MODE_PRIVATE).getString("scans",""); result.setText(saved.isEmpty()?"אין עדיין סריקות שמורות":saved); });
+    clearHistory.setOnClickListener(v->{getPreferences(MODE_PRIVATE).edit().remove("scans").apply();result.setText("היסטוריית הסריקות נמחקה");});
     copy.setOnClickListener(v->{ ((ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("NFC",result.getText())); Toast.makeText(this,"הועתק",Toast.LENGTH_SHORT).show(); });
   }
   void updateState(){ if(nfc==null){status.setText("אין NFC במכשיר");nfcState.setText("לא נתמך");} else if(!nfc.isEnabled()){status.setText("יש להפעיל NFC");nfcState.setText("NFC כבוי");} else nfcState.setText("NFC פעיל ומוכן"); }
@@ -31,6 +33,10 @@ public class MainActivity extends Activity implements NfcAdapter.ReaderCallback 
       if(type.equals("כרטיס חכם ISO-DEP")) s.append("\n\nזוהה ממשק כרטיס חכם (ISO-DEP). סוג הכרטיס המדויק אינו ניתן לקביעה מטכנולוגיית NFC בלבד.");
       if(raw.isChecked() && IsoDep.get(tag)==null) s.append("\n\nUID: ").append(id).append("\nUID bytes: ").append(tag.getId()==null?0:tag.getId().length);
       result.setText(s.toString());
+      String date=new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm",java.util.Locale.getDefault()).format(new java.util.Date());
+      String previous=getPreferences(MODE_PRIVATE).getString("scans","");
+      String entry=date+" | "+type+" | "+(payment.contains("זוהה ממשק תשלום")?"ממשק EMV זוהה":"סריקת NFC")+"\n";
+      getPreferences(MODE_PRIVATE).edit().putString("scans",(entry+previous).substring(0,Math.min(6000,(entry+previous).length()))).apply();
       if(vibrate.isChecked()&&Build.VERSION.SDK_INT>=26)((Vibrator)getSystemService(VIBRATOR_SERVICE)).vibrate(VibrationEffect.createOneShot(55,100));
       if(sound.isChecked()) new ToneGenerator(AudioManager.STREAM_NOTIFICATION,55).startTone(ToneGenerator.TONE_PROP_BEEP,100);
     });
